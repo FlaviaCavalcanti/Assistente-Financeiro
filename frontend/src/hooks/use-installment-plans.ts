@@ -5,12 +5,13 @@ import type { InstallmentPlan } from '@/types/api'
 
 interface CreateInstallmentInput {
   description:              string
-  debt_id:                  string
+  debt_id?:                 string // vazio/ausente = sem cartão
   category_id:              string
   total_cents:              number
   installment_amount_cents: number
   total_installments:       number
-  first_due_date:           string
+  paid_installments:        number
+  first_due_date:           string // próximo vencimento (YYYY-MM-DD)
 }
 
 export function useInstallmentPlans(onlyActive = true) {

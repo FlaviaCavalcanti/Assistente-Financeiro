@@ -46,12 +46,13 @@ func (r GetInstallmentPlanResponse) Failed() error { return r.Err }
 
 type CreateInstallmentPlanRequest struct {
 	Description            string       `json:"description"`
-	DebtID                 string       `json:"debt_id"`
+	DebtID                 string       `json:"debt_id"` // vazio = sem cartão
 	CategoryID             string       `json:"category_id"`
 	TotalCents             entity.Money `json:"total_cents"`
 	InstallmentAmountCents entity.Money `json:"installment_amount_cents"`
 	TotalInstallments      int          `json:"total_installments"`
-	FirstDueDate           string       `json:"first_due_date"`
+	PaidInstallments       int          `json:"paid_installments"`
+	FirstDueDate           string       `json:"first_due_date"` // próximo vencimento
 }
 
 type CreateInstallmentPlanResponse struct {
@@ -100,7 +101,8 @@ func makeCreateInstallmentPlanEndpoint(svc service.InstallmentPlanService) endpo
 		p, err := svc.Create(ctx, service.CreateInstallmentInput{
 			Description: req.Description, DebtID: req.DebtID, CategoryID: req.CategoryID,
 			TotalCents: req.TotalCents, InstallmentAmountCents: req.InstallmentAmountCents,
-			TotalInstallments: req.TotalInstallments, FirstDueDate: req.FirstDueDate,
+			TotalInstallments: req.TotalInstallments, PaidInstallments: req.PaidInstallments,
+			FirstDueDate: req.FirstDueDate,
 		})
 		return CreateInstallmentPlanResponse{Plan: p, Err: err}, nil
 	}

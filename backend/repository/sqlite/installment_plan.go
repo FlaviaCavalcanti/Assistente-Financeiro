@@ -123,6 +123,13 @@ func (r *installmentPlanRepository) FindActiveDueInMonth(ctx context.Context, ye
 	return plans, rows.Err()
 }
 
+func nullableDebtID(id string) interface{} {
+	if id == "" {
+		return nil
+	}
+	return id
+}
+
 func (r *installmentPlanRepository) Create(ctx context.Context, p entity.InstallmentPlan) error {
 	_, err := r.db.Conn.ExecContext(ctx,
 		`INSERT INTO installment_plans
@@ -130,7 +137,7 @@ func (r *installmentPlanRepository) Create(ctx context.Context, p entity.Install
 		   total_cents, installment_amount_cents, total_installments, paid_installments,
 		   first_due_date, active, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		p.ID, p.Description, p.DebtID, p.CategoryID,
+		p.ID, p.Description, nullableDebtID(p.DebtID), p.CategoryID,
 		p.TotalCents.Int64(), p.InstallmentAmountCents.Int64(),
 		p.TotalInstallments, p.PaidInstallments,
 		p.FirstDueDate.Format("2006-01-02"),
@@ -147,7 +154,7 @@ func (r *installmentPlanRepository) Update(ctx context.Context, p entity.Install
 		     total_cents=?, installment_amount_cents=?, total_installments=?, paid_installments=?,
 		     first_due_date=?, updated_at=?
 		 WHERE id=?`,
-		p.Description, p.DebtID, p.CategoryID,
+		p.Description, nullableDebtID(p.DebtID), p.CategoryID,
 		p.TotalCents.Int64(), p.InstallmentAmountCents.Int64(),
 		p.TotalInstallments, p.PaidInstallments,
 		p.FirstDueDate.Format("2006-01-02"),
@@ -174,10 +181,11 @@ func scanInstallmentPlan(s scanner) (entity.InstallmentPlan, error) {
 	var p entity.InstallmentPlan
 	var totalCents, installmentCents int64
 	var active int
+	var debtID sql.NullString
 	var firstDueDate, createdAt, updatedAt string
 
 	err := s.Scan(
-		&p.ID, &p.Description, &p.DebtID, &p.CategoryID,
+		&p.ID, &p.Description, &debtID, &p.CategoryID,
 		&totalCents, &installmentCents,
 		&p.TotalInstallments, &p.PaidInstallments,
 		&firstDueDate, &active, &createdAt, &updatedAt,
@@ -186,6 +194,7 @@ func scanInstallmentPlan(s scanner) (entity.InstallmentPlan, error) {
 		return entity.InstallmentPlan{}, err
 	}
 
+	p.DebtID = debtID.String
 	p.TotalCents = entity.Money(totalCents)
 	p.InstallmentAmountCents = entity.Money(installmentCents)
 	p.Active = intToBool(active)

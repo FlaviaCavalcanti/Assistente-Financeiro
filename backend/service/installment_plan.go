@@ -31,16 +31,21 @@ func (s *installmentPlanService) Create(ctx context.Context, input CreateInstall
 		return entity.InstallmentPlan{}, errors.New("first_due_date inválida: use formato YYYY-MM-DD")
 	}
 
+	totalCents := input.TotalCents
+	if totalCents == 0 {
+		totalCents = entity.Money(int64(input.InstallmentAmountCents) * int64(input.TotalInstallments))
+	}
+
 	now := time.Now().UTC()
 	p := entity.InstallmentPlan{
 		ID:                     newID(),
 		Description:            input.Description,
 		DebtID:                 input.DebtID,
 		CategoryID:             input.CategoryID,
-		TotalCents:             input.TotalCents,
+		TotalCents:             totalCents,
 		InstallmentAmountCents: input.InstallmentAmountCents,
 		TotalInstallments:      input.TotalInstallments,
-		PaidInstallments:       0,
+		PaidInstallments:       input.PaidInstallments,
 		FirstDueDate:           firstDueDate,
 		Active:                 true,
 		CreatedAt:              now,

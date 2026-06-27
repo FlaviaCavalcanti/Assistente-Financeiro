@@ -9,12 +9,13 @@ interface ExpenseFilter {
 }
 
 interface CreateExpenseInput {
-  description:  string
-  amount_cents: number
-  kind:         ExpenseKind
-  category_id:  string
-  recurrence:   RecurrenceKind
-  day_of_month: number
+  description:      string
+  amount_cents:     number
+  kind:             ExpenseKind
+  category_id:      string
+  recurrence:       RecurrenceKind
+  day_of_month:     number
+  transaction_date?: string // YYYY-MM-DD; gasto variável
 }
 
 function buildQuery(filter: ExpenseFilter) {

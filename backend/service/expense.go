@@ -48,9 +48,15 @@ func (s *expenseService) Create(ctx context.Context, input CreateExpenseInput) (
 
 	// Gasto variável gera Transaction automaticamente.
 	if input.Kind == entity.ExpenseKindVariable {
+		txDate := now
+		if input.TransactionDate != "" {
+			if parsed, err := time.Parse("2006-01-02", input.TransactionDate); err == nil {
+				txDate = parsed.UTC()
+			}
+		}
 		tx := entity.Transaction{
 			ID:          newID(),
-			Date:        now,
+			Date:        txDate,
 			Description: input.Description,
 			AmountCents: input.AmountCents,
 			Direction:   entity.DirectionDebit,

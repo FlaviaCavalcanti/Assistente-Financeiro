@@ -43,12 +43,13 @@ type UpdateIncomeSourceInput struct {
 }
 
 type CreateExpenseInput struct {
-	Description string
-	AmountCents entity.Money
-	Kind        entity.ExpenseKind
-	CategoryID  string
-	Recurrence  entity.RecurrenceKind
-	DayOfMonth  int
+	Description     string
+	AmountCents     entity.Money
+	Kind            entity.ExpenseKind
+	CategoryID      string
+	Recurrence      entity.RecurrenceKind
+	DayOfMonth      int
+	TransactionDate string // YYYY-MM-DD; somente para gasto variável
 }
 
 type UpdateExpenseInput struct {
@@ -95,12 +96,13 @@ type UpdateDebtInput struct {
 
 type CreateInstallmentInput struct {
 	Description            string
-	DebtID                 string
+	DebtID                 string // vazio = sem cartão
 	CategoryID             string
 	TotalCents             entity.Money
 	InstallmentAmountCents entity.Money
 	TotalInstallments      int
-	FirstDueDate           string // "YYYY-MM-DD"
+	PaidInstallments       int    // parcelas já pagas ao cadastrar
+	FirstDueDate           string // "YYYY-MM-DD" — próximo vencimento
 }
 
 type CreateTransactionInput struct {

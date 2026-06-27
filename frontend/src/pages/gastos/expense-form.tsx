@@ -13,11 +13,12 @@ import { floatToCents, centsToFloat } from '@/lib/format'
 import type { Expense } from '@/types/api'
 
 const schema = z.object({
-  description:  z.string().min(1, 'Descrição obrigatória'),
-  amount_brl:   z.coerce.number().positive('Valor obrigatório'),
-  kind:         z.enum(['fixed', 'variable']),
-  category_id:  z.string().min(1, 'Categoria obrigatória'),
-  day_of_month: z.coerce.number().min(0).max(31).optional(),
+  description:      z.string().min(1, 'Descrição obrigatória'),
+  amount_brl:       z.coerce.number().positive('Valor obrigatório'),
+  kind:             z.enum(['fixed', 'variable']),
+  category_id:      z.string().min(1, 'Categoria obrigatória'),
+  day_of_month:     z.coerce.number().min(0).max(31).optional(),
+  transaction_date: z.string().optional(),
 }).refine(d => d.kind !== 'fixed' || (d.day_of_month && d.day_of_month >= 1), {
   message: 'Dia de vencimento obrigatório para gasto fixo',
   path: ['day_of_month'],
@@ -37,27 +38,31 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
   const updateMut = useUpdateExpense()
   const [apiError, setApiError] = useState<string | null>(null)
 
+  const today = new Date().toISOString().split('T')[0]
+
   const form = useForm<FormData>({
     resolver: zodResolver(schema as any) as Resolver<FormData>,
     defaultValues: editing ? {
-      description:  editing.description,
-      amount_brl:   centsToFloat(editing.amount_cents),
-      kind:         editing.kind,
-      category_id:  editing.category_id,
-      day_of_month: editing.day_of_month || undefined,
-    } : { kind: 'fixed' },
+      description:      editing.description,
+      amount_brl:       centsToFloat(editing.amount_cents),
+      kind:             editing.kind,
+      category_id:      editing.category_id,
+      day_of_month:     editing.day_of_month || undefined,
+      transaction_date: today,
+    } : { kind: 'fixed', transaction_date: today },
   })
 
   useEffect(() => {
     if (open) {
       setApiError(null)
       form.reset(editing ? {
-        description:  editing.description,
-        amount_brl:   centsToFloat(editing.amount_cents),
-        kind:         editing.kind,
-        category_id:  editing.category_id,
-        day_of_month: editing.day_of_month || undefined,
-      } : { kind: 'fixed' })
+        description:      editing.description,
+        amount_brl:       centsToFloat(editing.amount_cents),
+        kind:             editing.kind,
+        category_id:      editing.category_id,
+        day_of_month:     editing.day_of_month || undefined,
+        transaction_date: today,
+      } : { kind: 'fixed', transaction_date: today })
     }
   }, [open, editing])
 
@@ -67,12 +72,13 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
     setApiError(null)
     try {
       const payload = {
-        description:  data.description,
-        amount_cents: floatToCents(data.amount_brl),
-        kind:         data.kind,
-        category_id:  data.category_id,
-        recurrence:   data.kind === 'fixed' ? 'monthly' as const : 'none' as const,
-        day_of_month: data.kind === 'fixed' ? (data.day_of_month ?? 1) : 0,
+        description:      data.description,
+        amount_cents:     floatToCents(data.amount_brl),
+        kind:             data.kind,
+        category_id:      data.category_id,
+        recurrence:       data.kind === 'fixed' ? 'monthly' as const : 'none' as const,
+        day_of_month:     data.kind === 'fixed' ? (data.day_of_month ?? 1) : 0,
+        transaction_date: data.kind === 'variable' ? (data.transaction_date ?? '') : '',
       }
       if (editing) {
         await updateMut.mutateAsync({ id: editing.id, data: payload })
@@ -128,6 +134,12 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
               <Label>Dia de vencimento *</Label>
               <Input type="number" min={1} max={31} placeholder="1–31" {...form.register('day_of_month')} error={!!errors.day_of_month} />
               {errors.day_of_month && <p className="text-xs text-negative">{errors.day_of_month.message}</p>}
+            </div>
+          )}
+          {kind === 'variable' && (
+            <div className="space-y-1.5">
+              <Label>Data do gasto *</Label>
+              <Input type="date" {...form.register('transaction_date')} />
             </div>
           )}
         </div>

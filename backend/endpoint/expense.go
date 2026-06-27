@@ -49,12 +49,13 @@ type GetExpenseResponse struct {
 func (r GetExpenseResponse) Failed() error { return r.Err }
 
 type CreateExpenseRequest struct {
-	Description string              `json:"description"`
-	AmountCents entity.Money        `json:"amount_cents"`
-	Kind        entity.ExpenseKind  `json:"kind"`
-	CategoryID  string              `json:"category_id"`
-	Recurrence  entity.RecurrenceKind `json:"recurrence"`
-	DayOfMonth  int                 `json:"day_of_month"`
+	Description     string              `json:"description"`
+	AmountCents     entity.Money        `json:"amount_cents"`
+	Kind            entity.ExpenseKind  `json:"kind"`
+	CategoryID      string              `json:"category_id"`
+	Recurrence      entity.RecurrenceKind `json:"recurrence"`
+	DayOfMonth      int                 `json:"day_of_month"`
+	TransactionDate string              `json:"transaction_date"` // YYYY-MM-DD; gasto variável
 }
 
 type CreateExpenseResponse struct {
@@ -109,6 +110,7 @@ func makeCreateExpenseEndpoint(svc service.ExpenseService) endpoint.Endpoint {
 		e, err := svc.Create(ctx, service.CreateExpenseInput{
 			Description: req.Description, AmountCents: req.AmountCents, Kind: req.Kind,
 			CategoryID: req.CategoryID, Recurrence: req.Recurrence, DayOfMonth: req.DayOfMonth,
+			TransactionDate: req.TransactionDate,
 		})
 		return CreateExpenseResponse{Expense: e, Err: err}, nil
 	}
