@@ -16,6 +16,8 @@ func NewRouter(
 	installmentEp endpoint.InstallmentPlanEndpoints,
 	transactionEp endpoint.TransactionEndpoints,
 	summaryEp     endpoint.SummaryEndpoints,
+	goalEp        endpoint.GoalEndpoints,
+	chatEp        endpoint.ChatEndpoints,
 	logger        log.Logger,
 ) http.Handler {
 	r := mux.NewRouter()
@@ -28,6 +30,8 @@ func NewRouter(
 	RegisterDebtRoutes(r, debtEp, logger)
 	RegisterInstallmentPlanRoutes(r, installmentEp, logger)
 	RegisterTransactionRoutes(r, transactionEp, logger)
+	RegisterGoalRoutes(r, goalEp, logger)
+	RegisterChatRoutes(r, chatEp, logger)
 
 	return r
 }

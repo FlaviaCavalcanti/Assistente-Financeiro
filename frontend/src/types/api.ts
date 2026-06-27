@@ -123,6 +123,23 @@ export interface TransactionListResponse {
   pagination: Pagination
 }
 
+export type GoalKind = 'emergency_fund' | 'purchase'
+
+export interface Goal {
+  id:            string
+  name:          string
+  kind:          GoalKind
+  target_cents:  Cents
+  target_months: number
+  current_cents: Cents
+  deadline:      string // YYYY-MM or ''
+  icon:          string
+  color:         string
+  active:        boolean
+  created_at:    string
+  updated_at:    string
+}
+
 export interface ApiErrorBody {
   error: {
     code:    'VALIDATION_ERROR' | 'NOT_FOUND' | 'CONFLICT' | 'INTERNAL_ERROR'

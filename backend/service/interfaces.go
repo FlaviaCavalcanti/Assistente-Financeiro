@@ -105,6 +105,27 @@ type CreateInstallmentInput struct {
 	FirstDueDate           string // "YYYY-MM-DD" — próximo vencimento
 }
 
+type CreateGoalInput struct {
+	Name         string
+	Kind         entity.GoalKind
+	TargetCents  entity.Money
+	TargetMonths int
+	CurrentCents entity.Money
+	Deadline     string
+	Icon         string
+	Color        string
+}
+
+type UpdateGoalInput struct {
+	Name         *string
+	TargetCents  *entity.Money
+	TargetMonths *int
+	CurrentCents *entity.Money
+	Deadline     *string
+	Icon         *string
+	Color        *string
+}
+
 type CreateTransactionInput struct {
 	Date        string // "YYYY-MM-DD"
 	Description string
@@ -170,6 +191,20 @@ type TransactionService interface {
 	Create(ctx context.Context, input CreateTransactionInput) (entity.Transaction, error)
 	Update(ctx context.Context, id string, input UpdateTransactionInput) (entity.Transaction, error)
 	Delete(ctx context.Context, id string) error
+}
+
+type GoalService interface {
+	List(ctx context.Context, onlyActive bool) ([]entity.Goal, error)
+	Get(ctx context.Context, id string) (entity.Goal, error)
+	Create(ctx context.Context, input CreateGoalInput) (entity.Goal, error)
+	Update(ctx context.Context, id string, input UpdateGoalInput) (entity.Goal, error)
+	Contribute(ctx context.Context, id string, amountCents entity.Money) (entity.Goal, error)
+	Deactivate(ctx context.Context, id string) error
+}
+
+type ChatService interface {
+	Status(ctx context.Context) (available bool, hasModel bool)
+	SendMessage(ctx context.Context, input SendMessageInput) (ChatResponse, error)
 }
 
 type SummaryService interface {

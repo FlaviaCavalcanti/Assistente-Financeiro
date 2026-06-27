@@ -7,4 +7,5 @@ export const queryKeys = {
   installmentPlans: (onlyActive: boolean) => ['installment-plans', { onlyActive }] as const,
   transactions:     (filter: { from?: string; to?: string; category_id?: string; direction?: string; page?: number; limit?: number }) => ['transactions', filter] as const,
   transaction:      (id: string) => ['transactions', id] as const,
+  goals:            (onlyActive: boolean) => ['goals', { onlyActive }] as const,
 }

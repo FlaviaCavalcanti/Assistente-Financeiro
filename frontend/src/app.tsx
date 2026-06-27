@@ -6,6 +6,8 @@ import RendaPage         from '@/pages/renda'
 import GastosPage        from '@/pages/gastos'
 import DividasPage       from '@/pages/dividas'
 import DiagnosticoPage   from '@/pages/diagnostico'
+import MetasPage         from '@/pages/metas'
+import ChatPage          from '@/pages/chat'
 import ConfiguracoesPage from '@/pages/configuracoes'
 
 export default function App() {
@@ -19,6 +21,8 @@ export default function App() {
         <Route path="/gastos"        element={<GastosPage />} />
         <Route path="/dividas"       element={<DividasPage />} />
         <Route path="/diagnostico"   element={<DiagnosticoPage />} />
+        <Route path="/metas"         element={<MetasPage />} />
+        <Route path="/chat"          element={<ChatPage />} />
         <Route path="/configuracoes" element={<ConfiguracoesPage />} />
         <Route path="*"              element={<Navigate to="/painel" replace />} />
       </Route>

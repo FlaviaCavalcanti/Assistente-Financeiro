@@ -88,3 +88,11 @@ type CategorySum struct {
 	CategoryID string
 	TotalCents entity.Money
 }
+
+type GoalRepository interface {
+	FindAll(ctx context.Context, onlyActive bool) ([]entity.Goal, error)
+	FindByID(ctx context.Context, id string) (entity.Goal, error)
+	Create(ctx context.Context, g entity.Goal) error
+	Update(ctx context.Context, g entity.Goal) error
+	Deactivate(ctx context.Context, id string) error
+}
