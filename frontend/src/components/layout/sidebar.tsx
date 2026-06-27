@@ -1,16 +1,17 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, ScrollText, TrendingUp,
-  TrendingDown, CreditCard, Settings2,
+  TrendingDown, CreditCard, Settings2, Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { to: '/painel',  icon: LayoutDashboard, label: 'Painel'   },
-  { to: '/extrato', icon: ScrollText,      label: 'Extrato'  },
-  { to: '/renda',   icon: TrendingUp,      label: 'Renda'    },
-  { to: '/gastos',  icon: TrendingDown,    label: 'Gastos'   },
-  { to: '/dividas', icon: CreditCard,      label: 'Dívidas'  },
+  { to: '/painel',      icon: LayoutDashboard, label: 'Painel'      },
+  { to: '/extrato',     icon: ScrollText,      label: 'Extrato'     },
+  { to: '/renda',       icon: TrendingUp,      label: 'Renda'       },
+  { to: '/gastos',      icon: TrendingDown,    label: 'Gastos'      },
+  { to: '/dividas',     icon: CreditCard,      label: 'Dívidas'     },
+  { to: '/diagnostico', icon: Activity,        label: 'Diagnóstico' },
 ]
 
 const bottomItems = [

@@ -5,6 +5,7 @@ import ExtratoPage       from '@/pages/extrato'
 import RendaPage         from '@/pages/renda'
 import GastosPage        from '@/pages/gastos'
 import DividasPage       from '@/pages/dividas'
+import DiagnosticoPage   from '@/pages/diagnostico'
 import ConfiguracoesPage from '@/pages/configuracoes'
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/renda"         element={<RendaPage />} />
         <Route path="/gastos"        element={<GastosPage />} />
         <Route path="/dividas"       element={<DividasPage />} />
+        <Route path="/diagnostico"   element={<DiagnosticoPage />} />
         <Route path="/configuracoes" element={<ConfiguracoesPage />} />
         <Route path="*"              element={<Navigate to="/painel" replace />} />
       </Route>
