@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { addMonths, format } from 'date-fns'
+import { addMonths, format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, Trash2, PiggyBank, ShoppingCart } from 'lucide-react'
+import { Plus, Trash2, Pencil, PiggyBank, ShoppingCart } from 'lucide-react'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { MoneyDisplay } from '@/components/money-display'
@@ -15,6 +15,17 @@ import { ContributeForm } from './contribute-form'
 import type { Goal } from '@/types/api'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
+
+function formatDeadline(deadline: string): string {
+  if (!deadline) return ''
+  try {
+    const d      = parseISO(deadline + '-01')
+    const result = format(d, "MMMM 'de' yyyy", { locale: ptBR })
+    return result.charAt(0).toUpperCase() + result.slice(1)
+  } catch {
+    return deadline
+  }
+}
 
 function progressBPS(goal: Goal): number {
   if (!goal.target_cents) return 0
@@ -36,14 +47,15 @@ function projectionLabel(months: number): string {
 // ─── GoalCard ────────────────────────────────────────────────────────────────
 
 interface GoalCardProps {
-  goal:          Goal
-  monthlyBalance: number
+  goal:            Goal
+  monthlyBalance:  number
   monthlyExpenses: number
-  onContribute:  (g: Goal) => void
-  onDelete:      (id: string) => void
+  onContribute:    (g: Goal) => void
+  onEdit:          (g: Goal) => void
+  onDelete:        (id: string) => void
 }
 
-function GoalCard({ goal, monthlyBalance, monthlyExpenses, onContribute, onDelete }: GoalCardProps) {
+function GoalCard({ goal, monthlyBalance, monthlyExpenses, onContribute, onEdit, onDelete }: GoalCardProps) {
   const bps      = progressBPS(goal)
   const pct      = (bps / 100).toFixed(1)
   const remaining = goal.target_cents - goal.current_cents
@@ -74,13 +86,22 @@ function GoalCard({ goal, monthlyBalance, monthlyExpenses, onContribute, onDelet
             <p className="text-xs text-subtle">{kindLabel}</p>
           </div>
         </div>
-        <button
-          onClick={() => onDelete(goal.id)}
-          className="text-subtle hover:text-negative transition-colors"
-          title="Arquivar meta"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onEdit(goal)}
+            className="text-text-muted hover:text-brand transition-colors"
+            title="Editar meta"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onDelete(goal.id)}
+            className="text-text-muted hover:text-negative transition-colors"
+            title="Arquivar meta"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Progress bar */}
@@ -116,7 +137,7 @@ function GoalCard({ goal, monthlyBalance, monthlyExpenses, onContribute, onDelet
             <>Meta já atingida!</>
           )}
           {goal.deadline && (
-            <> · Prazo: <span className="text-text font-medium">{goal.deadline}</span></>
+            <> · Prazo: <span className="text-text font-medium">{formatDeadline(goal.deadline)}</span></>
           )}
         </div>
       )}
@@ -144,7 +165,16 @@ function GoalCard({ goal, monthlyBalance, monthlyExpenses, onContribute, onDelet
 
 export default function MetasPage() {
   const [showForm, setShowForm]   = useState(false)
+  const [editGoal, setEditGoal]   = useState<Goal | null>(null)
   const [contrib, setContrib]     = useState<Goal | null>(null)
+
+  function handleEdit(goal: Goal) {
+    setEditGoal(goal)
+  }
+
+  function handleEditClose() {
+    setEditGoal(null)
+  }
 
   const { data: goals, isLoading, error } = useGoals(true)
   const { data: summary } = useMonthSummary(currentMonth())
@@ -210,6 +240,7 @@ export default function MetasPage() {
                 monthlyBalance={monthlyBalance}
                 monthlyExpenses={monthlyExpenses}
                 onContribute={setContrib}
+                onEdit={handleEdit}
                 onDelete={handleDelete}
               />
             ))}
@@ -218,6 +249,7 @@ export default function MetasPage() {
       )}
 
       <GoalForm open={showForm} onClose={() => setShowForm(false)} summary={summary} />
+      <GoalForm open={!!editGoal} onClose={handleEditClose} summary={summary} goal={editGoal ?? undefined} />
 
       {contrib && (
         <ContributeForm
