@@ -10,10 +10,18 @@ import { useIncomeSources, useDeactivateIncomeSource } from '@/hooks/use-income-
 import { SkeletonCard } from '@/components/loading-skeleton'
 import { ErrorMessage } from '@/components/error-message'
 import { EmptyState } from '@/components/empty-state'
+import { formatMonth } from '@/lib/format'
 import type { IncomeSource } from '@/types/api'
 
 const recurrenceLabel: Record<string, string> = {
   monthly: 'Mensal', weekly: 'Semanal', biweekly: 'Quinzenal', none: '—',
+}
+
+function formatPeriod(first: string, last: string): string {
+  if (!first) return ''
+  const start = formatMonth(first)
+  if (!last || last === first) return start
+  return `${start} – ${formatMonth(last)}`
 }
 
 export default function RendaPage() {
@@ -154,6 +162,12 @@ function IncomeCard({ source, onEdit, onDeactivate }: {
           <div className="ml-auto text-right">
             <p className="text-xs text-text-muted mb-0.5">{recurrenceLabel[source.recurrence]}</p>
             <p className="text-sm tabular text-text">Dia {source.day_of_month}</p>
+          </div>
+        )}
+        {source.kind === 'one_time' && source.first_month && (
+          <div className="ml-auto text-right">
+            <p className="text-xs text-text-muted mb-0.5">Período</p>
+            <p className="text-sm text-text">{formatPeriod(source.first_month, source.last_month)}</p>
           </div>
         )}
       </div>

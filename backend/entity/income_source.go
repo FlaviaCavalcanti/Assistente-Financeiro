@@ -26,9 +26,25 @@ type IncomeSource struct {
 	NetCents   Money            `json:"net_cents"`
 	Recurrence RecurrenceKind   `json:"recurrence"`
 	DayOfMonth int              `json:"day_of_month"`
+	FirstMonth string           `json:"first_month"` // YYYY-MM — início do período (one_time)
+	LastMonth  string           `json:"last_month"`  // YYYY-MM — fim do período (vazio = só um mês)
 	Active     bool             `json:"active"`
 	CreatedAt  time.Time        `json:"created_at"`
 	UpdatedAt  time.Time        `json:"updated_at"`
+}
+
+// AppliesToMonth informa se uma renda avulsa deve ser contabilizada no mês informado (formato YYYY-MM).
+func (i IncomeSource) AppliesToMonth(month string) bool {
+	if i.FirstMonth == "" {
+		return false
+	}
+	if month < i.FirstMonth {
+		return false
+	}
+	if i.LastMonth != "" && month > i.LastMonth {
+		return false
+	}
+	return true
 }
 
 func (i IncomeSource) Validate() error {

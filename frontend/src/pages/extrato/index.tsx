@@ -7,17 +7,31 @@ import { Input } from '@/components/ui/input'
 import { MoneyDisplay } from '@/components/money-display'
 import { CategoryBadge } from '@/components/category-badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
+import { MonthPicker } from '@/components/month-picker'
 import { TransactionForm } from './transaction-form'
 import { useTransactions, useDeleteTransaction, type TransactionFilter } from '@/hooks/use-transactions'
 import { useCategories } from '@/hooks/use-categories'
-import { formatDate } from '@/lib/format'
+import { formatDate, currentMonth } from '@/lib/format'
 import { SkeletonTable } from '@/components/loading-skeleton'
 import { ErrorMessage } from '@/components/error-message'
 import { EmptyState } from '@/components/empty-state'
 import type { Transaction, Direction } from '@/types/api'
 
+function monthToRange(yyyyMM: string) {
+  const [y, m] = yyyyMM.split('-').map(Number)
+  const lastDay = new Date(y, m, 0).getDate()
+  return { from: `${yyyyMM}-01`, to: `${yyyyMM}-${String(lastDay).padStart(2, '0')}` }
+}
+
 export default function ExtratoPage() {
-  const [filter, setFilter]           = useState<TransactionFilter>({ page: 1, limit: 50 })
+  const [month, setMonth] = useState(currentMonth)
+  const initialRange = monthToRange(currentMonth())
+  const [filter, setFilter] = useState<TransactionFilter>({ page: 1, limit: 50, ...initialRange })
+
+  const handleMonthChange = (m: string) => {
+    setMonth(m)
+    setFilter({ page: 1, limit: 50, ...monthToRange(m) })
+  }
   const [showForm, setShowForm]       = useState(false)
   const [editing, setEditing]         = useState<Transaction | undefined>()
   const [deleting, setDeleting]       = useState<Transaction | undefined>()
@@ -39,6 +53,7 @@ export default function ExtratoPage() {
     <div className="space-y-5">
       <PageHeader
         title="Extrato"
+        extra={<MonthPicker value={month} onChange={handleMonthChange} />}
         action={
           <Button size="sm" onClick={() => { setEditing(undefined); setShowForm(true) }}>
             <Plus className="h-4 w-4" /> Novo lançamento
@@ -83,8 +98,8 @@ export default function ExtratoPage() {
           <option value="credit">Crédito</option>
           <option value="debit">Débito</option>
         </Select>
-        {(filter.from || filter.to || filter.category_id || filter.direction) && (
-          <Button variant="ghost" size="sm" onClick={() => setFilter({ page: 1, limit: 50 })}>
+        {(filter.category_id || filter.direction) && (
+          <Button variant="ghost" size="sm" onClick={() => setFilter({ page: 1, limit: 50, ...monthToRange(month) })}>
             Limpar filtros
           </Button>
         )}

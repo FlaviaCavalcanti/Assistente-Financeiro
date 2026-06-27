@@ -56,6 +56,8 @@ func (s *summaryService) GetMonthly(ctx context.Context, month string) (entity.S
 	for _, src := range sources {
 		if src.Kind == entity.IncomeKindRecurring {
 			incomeTotal = incomeTotal.Add(src.NetCents)
+		} else if src.Kind == entity.IncomeKindOneTime && src.AppliesToMonth(month) {
+			incomeTotal = incomeTotal.Add(src.NetCents)
 		}
 	}
 	// Créditos avulsos do mês (renda extra lançada como transação)
@@ -111,12 +113,12 @@ func (s *summaryService) GetMonthly(ctx context.Context, month string) (entity.S
 			installmentCommitment.Int64(),
 	)
 
-	// 7. Breakdown por categoria
+	// 7. Breakdown por categoria (transações variáveis + gastos fixos ativos)
 	catSums, err := s.transactionRepo.SumByCategory(ctx, from, to)
 	if err != nil {
 		return entity.Summary{}, err
 	}
-	breakdown, err := s.buildBreakdown(ctx, catSums, variableTotal)
+	breakdown, err := s.buildBreakdown(ctx, catSums, fixedExpenses, fixedTotal.Add(variableTotal))
 	if err != nil {
 		return entity.Summary{}, err
 	}
@@ -134,8 +136,24 @@ func (s *summaryService) GetMonthly(ctx context.Context, month string) (entity.S
 	}, nil
 }
 
-func (s *summaryService) buildBreakdown(ctx context.Context, sums []repository.CategorySum, total entity.Money) ([]entity.CategoryBreakdown, error) {
-	if len(sums) == 0 || total.IsZero() {
+func (s *summaryService) buildBreakdown(ctx context.Context, sums []repository.CategorySum, fixedExpenses []entity.Expense, total entity.Money) ([]entity.CategoryBreakdown, error) {
+	if total.IsZero() {
+		return nil, nil
+	}
+
+	// Agrupa transações variáveis por categoria
+	merged := make(map[string]entity.Money)
+	for _, cs := range sums {
+		merged[cs.CategoryID] = merged[cs.CategoryID].Add(cs.TotalCents)
+	}
+	// Inclui gastos fixos ativos por categoria
+	for _, e := range fixedExpenses {
+		if e.CategoryID != "" {
+			merged[e.CategoryID] = merged[e.CategoryID].Add(e.AmountCents)
+		}
+	}
+
+	if len(merged) == 0 {
 		return nil, nil
 	}
 
@@ -148,14 +166,14 @@ func (s *summaryService) buildBreakdown(ctx context.Context, sums []repository.C
 		catByID[c.ID] = c
 	}
 
-	breakdown := make([]entity.CategoryBreakdown, 0, len(sums))
-	for _, s := range sums {
-		cat := catByID[s.CategoryID]
-		shareBps := entity.BasisPoints(s.TotalCents.Int64() * 10000 / total.Int64())
+	breakdown := make([]entity.CategoryBreakdown, 0, len(merged))
+	for catID, amount := range merged {
+		cat := catByID[catID]
+		shareBps := entity.BasisPoints(amount.Int64() * 10000 / total.Int64())
 		breakdown = append(breakdown, entity.CategoryBreakdown{
-			CategoryID:   s.CategoryID,
+			CategoryID:   catID,
 			CategoryName: cat.Name,
-			TotalCents:   s.TotalCents,
+			TotalCents:   amount,
 			ShareBps:     shareBps,
 		})
 	}

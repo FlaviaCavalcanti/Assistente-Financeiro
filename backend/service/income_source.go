@@ -34,6 +34,8 @@ func (s *incomeSourceService) Create(ctx context.Context, input CreateIncomeSour
 		NetCents:   input.NetCents,
 		Recurrence: input.Recurrence,
 		DayOfMonth: input.DayOfMonth,
+		FirstMonth: input.FirstMonth,
+		LastMonth:  input.LastMonth,
 		Active:     true,
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -66,6 +68,12 @@ func (s *incomeSourceService) Update(ctx context.Context, id string, input Updat
 	}
 	if input.DayOfMonth != nil {
 		src.DayOfMonth = *input.DayOfMonth
+	}
+	if input.FirstMonth != nil {
+		src.FirstMonth = *input.FirstMonth
+	}
+	if input.LastMonth != nil {
+		src.LastMonth = *input.LastMonth
 	}
 	src.UpdatedAt = time.Now().UTC()
 	if err := src.Validate(); err != nil {

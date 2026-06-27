@@ -28,6 +28,8 @@ type CreateIncomeSourceInput struct {
 	NetCents   entity.Money
 	Recurrence entity.RecurrenceKind
 	DayOfMonth int
+	FirstMonth string // YYYY-MM (renda avulsa)
+	LastMonth  string // YYYY-MM (renda avulsa, vazio = só um mês)
 }
 
 type UpdateIncomeSourceInput struct {
@@ -36,6 +38,8 @@ type UpdateIncomeSourceInput struct {
 	NetCents   *entity.Money
 	Recurrence *entity.RecurrenceKind
 	DayOfMonth *int
+	FirstMonth *string
+	LastMonth  *string
 }
 
 type CreateExpenseInput struct {

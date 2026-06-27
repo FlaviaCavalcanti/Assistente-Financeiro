@@ -51,6 +51,8 @@ type CreateIncomeSourceRequest struct {
 	NetCents   entity.Money            `json:"net_cents"`
 	Recurrence entity.RecurrenceKind   `json:"recurrence"`
 	DayOfMonth int                     `json:"day_of_month"`
+	FirstMonth string                  `json:"first_month"`
+	LastMonth  string                  `json:"last_month"`
 }
 
 type CreateIncomeSourceResponse struct {
@@ -67,6 +69,8 @@ type UpdateIncomeSourceRequest struct {
 	NetCents   *entity.Money            `json:"net_cents"`
 	Recurrence *entity.RecurrenceKind   `json:"recurrence"`
 	DayOfMonth *int                     `json:"day_of_month"`
+	FirstMonth *string                  `json:"first_month"`
+	LastMonth  *string                  `json:"last_month"`
 }
 
 type UpdateIncomeSourceResponse struct {
@@ -106,6 +110,7 @@ func makeCreateIncomeSourceEndpoint(svc service.IncomeSourceService) endpoint.En
 		s, err := svc.Create(ctx, service.CreateIncomeSourceInput{
 			Name: req.Name, Kind: req.Kind, GrossCents: req.GrossCents,
 			NetCents: req.NetCents, Recurrence: req.Recurrence, DayOfMonth: req.DayOfMonth,
+			FirstMonth: req.FirstMonth, LastMonth: req.LastMonth,
 		})
 		return CreateIncomeSourceResponse{IncomeSource: s, Err: err}, nil
 	}
@@ -117,6 +122,7 @@ func makeUpdateIncomeSourceEndpoint(svc service.IncomeSourceService) endpoint.En
 		s, err := svc.Update(ctx, req.ID, service.UpdateIncomeSourceInput{
 			Name: req.Name, GrossCents: req.GrossCents, NetCents: req.NetCents,
 			Recurrence: req.Recurrence, DayOfMonth: req.DayOfMonth,
+			FirstMonth: req.FirstMonth, LastMonth: req.LastMonth,
 		})
 		return UpdateIncomeSourceResponse{IncomeSource: s, Err: err}, nil
 	}

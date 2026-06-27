@@ -18,7 +18,7 @@ func NewIncomeSourceRepository(db *DB) *incomeSourceRepository {
 }
 
 func (r *incomeSourceRepository) FindAll(ctx context.Context, onlyActive bool) ([]entity.IncomeSource, error) {
-	query := `SELECT id, name, kind, gross_cents, net_cents, recurrence, day_of_month, active, created_at, updated_at
+	query := `SELECT id, name, kind, gross_cents, net_cents, recurrence, day_of_month, first_month, last_month, active, created_at, updated_at
 	          FROM income_sources`
 	if onlyActive {
 		query += ` WHERE active = 1`
@@ -44,7 +44,7 @@ func (r *incomeSourceRepository) FindAll(ctx context.Context, onlyActive bool) (
 
 func (r *incomeSourceRepository) FindByID(ctx context.Context, id string) (entity.IncomeSource, error) {
 	row := r.db.Conn.QueryRowContext(ctx,
-		`SELECT id, name, kind, gross_cents, net_cents, recurrence, day_of_month, active, created_at, updated_at
+		`SELECT id, name, kind, gross_cents, net_cents, recurrence, day_of_month, first_month, last_month, active, created_at, updated_at
 		 FROM income_sources WHERE id = ?`, id)
 	s, err := scanIncomeSource(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -55,10 +55,10 @@ func (r *incomeSourceRepository) FindByID(ctx context.Context, id string) (entit
 
 func (r *incomeSourceRepository) Create(ctx context.Context, s entity.IncomeSource) error {
 	_, err := r.db.Conn.ExecContext(ctx,
-		`INSERT INTO income_sources (id, name, kind, gross_cents, net_cents, recurrence, day_of_month, active, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO income_sources (id, name, kind, gross_cents, net_cents, recurrence, day_of_month, first_month, last_month, active, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		s.ID, s.Name, string(s.Kind), s.GrossCents.Int64(), s.NetCents.Int64(),
-		string(s.Recurrence), s.DayOfMonth, boolToInt(s.Active),
+		string(s.Recurrence), s.DayOfMonth, s.FirstMonth, s.LastMonth, boolToInt(s.Active),
 		s.CreatedAt.UTC().Format(time.RFC3339), s.UpdatedAt.UTC().Format(time.RFC3339),
 	)
 	return err
@@ -67,10 +67,11 @@ func (r *incomeSourceRepository) Create(ctx context.Context, s entity.IncomeSour
 func (r *incomeSourceRepository) Update(ctx context.Context, s entity.IncomeSource) error {
 	res, err := r.db.Conn.ExecContext(ctx,
 		`UPDATE income_sources
-		 SET name=?, kind=?, gross_cents=?, net_cents=?, recurrence=?, day_of_month=?, updated_at=?
+		 SET name=?, kind=?, gross_cents=?, net_cents=?, recurrence=?, day_of_month=?, first_month=?, last_month=?, updated_at=?
 		 WHERE id=?`,
 		s.Name, string(s.Kind), s.GrossCents.Int64(), s.NetCents.Int64(),
-		string(s.Recurrence), s.DayOfMonth, s.UpdatedAt.UTC().Format(time.RFC3339), s.ID,
+		string(s.Recurrence), s.DayOfMonth, s.FirstMonth, s.LastMonth,
+		s.UpdatedAt.UTC().Format(time.RFC3339), s.ID,
 	)
 	if err != nil {
 		return err
@@ -104,6 +105,7 @@ func scanIncomeSource(s scanner) (entity.IncomeSource, error) {
 		&src.ID, &src.Name, &src.Kind,
 		&grossCents, &netCents,
 		&src.Recurrence, &src.DayOfMonth,
+		&src.FirstMonth, &src.LastMonth,
 		&active, &createdAt, &updatedAt,
 	)
 	if err != nil {

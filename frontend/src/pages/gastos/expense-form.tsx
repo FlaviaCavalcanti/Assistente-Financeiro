@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -17,7 +17,7 @@ const schema = z.object({
   amount_brl:   z.coerce.number().positive('Valor obrigatório'),
   kind:         z.enum(['fixed', 'variable']),
   category_id:  z.string().min(1, 'Categoria obrigatória'),
-  day_of_month: z.coerce.number().min(1).max(31).optional(),
+  day_of_month: z.coerce.number().min(0).max(31).optional(),
 }).refine(d => d.kind !== 'fixed' || (d.day_of_month && d.day_of_month >= 1), {
   message: 'Dia de vencimento obrigatório para gasto fixo',
   path: ['day_of_month'],
@@ -35,6 +35,7 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
   const { data: categories } = useCategories()
   const createMut = useCreateExpense()
   const updateMut = useUpdateExpense()
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema as any) as Resolver<FormData>,
@@ -49,6 +50,7 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
 
   useEffect(() => {
     if (open) {
+      setApiError(null)
       form.reset(editing ? {
         description:  editing.description,
         amount_brl:   centsToFloat(editing.amount_cents),
@@ -62,20 +64,25 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
   const kind = form.watch('kind')
 
   const onSubmit = form.handleSubmit(async (data) => {
-    const payload = {
-      description:  data.description,
-      amount_cents: floatToCents(data.amount_brl),
-      kind:         data.kind,
-      category_id:  data.category_id,
-      recurrence:   data.kind === 'fixed' ? 'monthly' as const : 'none' as const,
-      day_of_month: data.kind === 'fixed' ? (data.day_of_month ?? 1) : 0,
+    setApiError(null)
+    try {
+      const payload = {
+        description:  data.description,
+        amount_cents: floatToCents(data.amount_brl),
+        kind:         data.kind,
+        category_id:  data.category_id,
+        recurrence:   data.kind === 'fixed' ? 'monthly' as const : 'none' as const,
+        day_of_month: data.kind === 'fixed' ? (data.day_of_month ?? 1) : 0,
+      }
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, data: payload })
+      } else {
+        await createMut.mutateAsync(payload)
+      }
+      onClose()
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Erro ao salvar gasto.')
     }
-    if (editing) {
-      await updateMut.mutateAsync({ id: editing.id, data: payload })
-    } else {
-      await createMut.mutateAsync(payload)
-    }
-    onClose()
   })
 
   const isPending = createMut.isPending || updateMut.isPending
@@ -124,6 +131,12 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
             </div>
           )}
         </div>
+
+        {apiError && (
+          <p className="text-xs text-negative bg-negative/10 border border-negative/20 rounded px-3 py-2">
+            {apiError}
+          </p>
+        )}
 
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>

@@ -10,6 +10,8 @@ interface CreateIncomeInput {
   net_cents:    number
   recurrence:   RecurrenceKind
   day_of_month: number
+  first_month?: string // YYYY-MM (renda avulsa)
+  last_month?:  string // YYYY-MM (renda avulsa, vazio = só um mês)
 }
 
 export function useIncomeSources(onlyActive = true) {

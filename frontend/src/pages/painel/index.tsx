@@ -28,7 +28,7 @@ export default function PainelPage() {
           <SummaryCards summary={summary} />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <CategoryChart data={summary.by_category} />
-            <RecentTransactions />
+            <RecentTransactions month={month} />
           </div>
         </>
       )}

@@ -39,6 +39,10 @@ func (db *DB) Close() error {
 }
 
 func (db *DB) runMigrations() error {
+	if _, err := db.Conn.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (filename TEXT PRIMARY KEY, run_at TEXT NOT NULL)`); err != nil {
+		return fmt.Errorf("sqlite: criar schema_migrations: %w", err)
+	}
+
 	entries, err := fs.ReadDir(migrationsFS, "migrations")
 	if err != nil {
 		return err
@@ -52,12 +56,20 @@ func (db *DB) runMigrations() error {
 		if e.IsDir() {
 			continue
 		}
+		var count int
+		_ = db.Conn.QueryRow(`SELECT COUNT(*) FROM schema_migrations WHERE filename = ?`, e.Name()).Scan(&count)
+		if count > 0 {
+			continue
+		}
 		content, err := migrationsFS.ReadFile("migrations/" + e.Name())
 		if err != nil {
 			return fmt.Errorf("ler migration %s: %w", e.Name(), err)
 		}
 		if _, err := db.Conn.Exec(string(content)); err != nil {
 			return fmt.Errorf("executar migration %s: %w", e.Name(), err)
+		}
+		if _, err := db.Conn.Exec(`INSERT INTO schema_migrations (filename, run_at) VALUES (?, datetime('now'))`, e.Name()); err != nil {
+			return fmt.Errorf("registrar migration %s: %w", e.Name(), err)
 		}
 	}
 	return nil

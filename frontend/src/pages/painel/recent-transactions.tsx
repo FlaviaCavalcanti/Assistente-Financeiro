@@ -6,8 +6,14 @@ import { useCategories } from '@/hooks/use-categories'
 import { formatDate } from '@/lib/format'
 import { SkeletonTable } from '@/components/loading-skeleton'
 
-export function RecentTransactions() {
-  const { data, isLoading } = useTransactions({ limit: 5, page: 1 })
+function monthToRange(yyyyMM: string) {
+  const [y, m] = yyyyMM.split('-').map(Number)
+  const lastDay = new Date(y, m, 0).getDate()
+  return { from: `${yyyyMM}-01`, to: `${yyyyMM}-${String(lastDay).padStart(2, '0')}` }
+}
+
+export function RecentTransactions({ month }: { month: string }) {
+  const { data, isLoading } = useTransactions({ limit: 5, page: 1, ...monthToRange(month) })
   const { data: categories } = useCategories()
 
   const catMap = Object.fromEntries((categories ?? []).map(c => [c.id, c]))

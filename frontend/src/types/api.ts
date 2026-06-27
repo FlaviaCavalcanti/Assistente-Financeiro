@@ -24,6 +24,8 @@ export interface IncomeSource {
   net_cents:    Cents
   recurrence:   RecurrenceKind
   day_of_month: number
+  first_month:  string // YYYY-MM — início do período (renda avulsa)
+  last_month:   string // YYYY-MM — fim do período (vazio = só um mês)
   active:       boolean
   created_at:   string
   updated_at:   string
