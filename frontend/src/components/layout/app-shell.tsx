@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
+import { FloatingChat } from '@/components/chat/floating-chat'
 
 export function AppShell() {
   return (
@@ -12,6 +13,7 @@ export function AppShell() {
           </div>
         </div>
       </main>
+      <FloatingChat />
     </div>
   )
 }

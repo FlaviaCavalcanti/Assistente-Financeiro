@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, ScrollText, TrendingUp,
-  TrendingDown, CreditCard, Settings2, Activity, PiggyBank, MessageCircle,
+  TrendingDown, CreditCard, Settings2, Activity, PiggyBank, Wallet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -13,7 +13,6 @@ const navItems = [
   { to: '/dividas',     icon: CreditCard,      label: 'Dívidas'     },
   { to: '/diagnostico', icon: Activity,        label: 'Diagnóstico' },
   { to: '/metas',       icon: PiggyBank,       label: 'Metas'       },
-  { to: '/chat',        icon: MessageCircle,   label: 'Assistente'  },
 ]
 
 const bottomItems = [
@@ -29,7 +28,7 @@ function NavItem({ to, icon: Icon, label }: { to: string; icon: typeof LayoutDas
           'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
           isActive
             ? 'bg-brand-subtle text-brand'
-            : 'text-text-muted hover:text-text hover:bg-ground-raised'
+            : 'text-text-muted hover:text-text hover:bg-ground-raised',
         )
       }
     >
@@ -42,9 +41,15 @@ function NavItem({ to, icon: Icon, label }: { to: string; icon: typeof LayoutDas
 export function Sidebar() {
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-border bg-ground-surface sticky top-0">
-      <div className="px-4 py-5 border-b border-border">
-        <p className="text-sm font-semibold text-text-strong">Assistente Financeiro</p>
-        <p className="text-xs text-text-muted mt-0.5">Finanças pessoais</p>
+      {/* Marca */}
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/20">
+          <Wallet className="h-4 w-4 text-brand" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-text-strong leading-none">Finança Pessoal</p>
+          <p className="text-xs text-text-muted mt-0.5">Gestão financeira</p>
+        </div>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-3 overflow-y-auto">
