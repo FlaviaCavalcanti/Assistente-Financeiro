@@ -25,6 +25,8 @@ frontend/dist-ssr/
 .env
 .env.local
 .env.*.local
+CLAUDE.md
+
 
 # Editor
 .vscode/
@@ -32,3 +34,5 @@ frontend/dist-ssr/
 *.suo
 *.sw?
 .DS_Store
+
+
