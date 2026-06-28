@@ -7,7 +7,6 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-pure%20Go-003B57?style=flat-square&logo=sqlite&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-local%20AI-black?style=flat-square)
-![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 ---
 
