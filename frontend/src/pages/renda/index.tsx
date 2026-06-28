@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MoneyDisplay } from '@/components/money-display'
 import { AlertDialog } from '@/components/ui/alert-dialog'
+import { JuliusCard } from '@/components/julius-card'
 import { IncomeForm } from './income-form'
 import { useIncomeSources, useDeactivateIncomeSource } from '@/hooks/use-income-sources'
 import { SkeletonCard } from '@/components/loading-skeleton'
 import { ErrorMessage } from '@/components/error-message'
 import { EmptyState } from '@/components/empty-state'
 import { formatMonth } from '@/lib/format'
+import { getJuliusQuote } from '@/lib/julius'
 import type { IncomeSource } from '@/types/api'
 
 const recurrenceLabel: Record<string, string> = {
@@ -25,9 +27,10 @@ function formatPeriod(first: string, last: string): string {
 }
 
 export default function RendaPage() {
-  const [showForm, setShowForm]   = useState(false)
-  const [editing, setEditing]     = useState<IncomeSource | undefined>()
-  const [deleting, setDeleting]   = useState<IncomeSource | undefined>()
+  const [showForm, setShowForm]       = useState(false)
+  const [editing, setEditing]         = useState<IncomeSource | undefined>()
+  const [deleting, setDeleting]       = useState<IncomeSource | undefined>()
+  const [juliusQuote, setJuliusQuote] = useState<string | null>(null)
 
   const { data, isLoading, isError, refetch } = useIncomeSources(true)
   const deactivateMut = useDeactivateIncomeSource()
@@ -108,10 +111,26 @@ export default function RendaPage() {
         </section>
       )}
 
+      {juliusQuote && (
+        <JuliusCard
+          quote={juliusQuote}
+          variant="toast"
+          onDismiss={() => setJuliusQuote(null)}
+        />
+      )}
+
       <IncomeForm
         open={showForm}
         onClose={() => { setShowForm(false); setEditing(undefined) }}
         editing={editing}
+        onCreated={(kind) => {
+          if (kind === 'one_time') {
+            setJuliusQuote(getJuliusQuote('extra_income'))
+          } else if ((data ?? []).length >= 1) {
+            // já tinha pelo menos uma fonte antes de criar esta
+            setJuliusQuote(getJuliusQuote('second_job'))
+          }
+        }}
       />
 
       <AlertDialog

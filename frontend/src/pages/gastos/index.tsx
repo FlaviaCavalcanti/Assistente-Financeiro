@@ -7,18 +7,21 @@ import { Badge } from '@/components/ui/badge'
 import { MoneyDisplay } from '@/components/money-display'
 import { CategoryBadge } from '@/components/category-badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
+import { JuliusCard } from '@/components/julius-card'
 import { ExpenseForm } from './expense-form'
 import { useExpenses, useDeactivateExpense } from '@/hooks/use-expenses'
 import { useCategories } from '@/hooks/use-categories'
 import { SkeletonCard } from '@/components/loading-skeleton'
 import { ErrorMessage } from '@/components/error-message'
 import { EmptyState } from '@/components/empty-state'
+import { getJuliusQuote } from '@/lib/julius'
 import type { Expense, Category } from '@/types/api'
 
 export default function GastosPage() {
-  const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing]   = useState<Expense | undefined>()
-  const [deleting, setDeleting] = useState<Expense | undefined>()
+  const [showForm, setShowForm]     = useState(false)
+  const [editing, setEditing]       = useState<Expense | undefined>()
+  const [deleting, setDeleting]     = useState<Expense | undefined>()
+  const [juliusQuote, setJuliusQuote] = useState<string | null>(null)
 
   const { data: allExpenses, isLoading, isError, refetch } = useExpenses({ onlyActive: true })
   const { data: categories } = useCategories()
@@ -112,10 +115,21 @@ export default function GastosPage() {
         </TabsContent>
       </Tabs>
 
+      {juliusQuote && (
+        <JuliusCard
+          quote={juliusQuote}
+          variant="toast"
+          onDismiss={() => setJuliusQuote(null)}
+        />
+      )}
+
       <ExpenseForm
         open={showForm}
         onClose={() => { setShowForm(false); setEditing(undefined) }}
         editing={editing}
+        onCreated={(kind) => {
+          if (kind === 'variable') setJuliusQuote(getJuliusQuote('variable_expense'))
+        }}
       />
 
       <AlertDialog

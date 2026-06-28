@@ -47,7 +47,7 @@ export function Sidebar() {
           <Wallet className="h-4 w-4 text-brand" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-text-strong leading-none">Finança Pessoal</p>
+          <p className="text-sm font-semibold text-text-strong leading-none">Projeto Julius</p>
           <p className="text-xs text-text-muted mt-0.5">Gestão financeira</p>
         </div>
       </div>

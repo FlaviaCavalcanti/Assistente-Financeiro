@@ -34,12 +34,13 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 interface IncomeFormProps {
-  open:     boolean
-  onClose:  () => void
-  editing?: IncomeSource
+  open:       boolean
+  onClose:    () => void
+  editing?:   IncomeSource
+  onCreated?: (kind: 'recurring' | 'one_time') => void
 }
 
-export function IncomeForm({ open, onClose, editing }: IncomeFormProps) {
+export function IncomeForm({ open, onClose, editing, onCreated }: IncomeFormProps) {
   const createMut = useCreateIncomeSource()
   const updateMut = useUpdateIncomeSource()
 
@@ -83,6 +84,7 @@ export function IncomeForm({ open, onClose, editing }: IncomeFormProps) {
       await updateMut.mutateAsync({ id: editing.id, data: payload })
     } else {
       await createMut.mutateAsync(payload)
+      onCreated?.(data.kind)
     }
     onClose()
   })

@@ -27,12 +27,13 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 interface ExpenseFormProps {
-  open:     boolean
-  onClose:  () => void
-  editing?: Expense
+  open:       boolean
+  onClose:    () => void
+  editing?:   Expense
+  onCreated?: (kind: 'fixed' | 'variable') => void
 }
 
-export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
+export function ExpenseForm({ open, onClose, editing, onCreated }: ExpenseFormProps) {
   const { data: categories } = useCategories()
   const createMut = useCreateExpense()
   const updateMut = useUpdateExpense()
@@ -84,6 +85,7 @@ export function ExpenseForm({ open, onClose, editing }: ExpenseFormProps) {
         await updateMut.mutateAsync({ id: editing.id, data: payload })
       } else {
         await createMut.mutateAsync(payload)
+        onCreated?.(data.kind)
       }
       onClose()
     } catch (err) {
