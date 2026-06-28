@@ -28,6 +28,10 @@ func RegisterInstallmentPlanRoutes(r *mux.Router, ep endpoint.InstallmentPlanEnd
 		}), EncodeResponse, opts...),
 	).Methods(http.MethodGet)
 
+	r.Handle("/api/v1/installment-plans/{id}",
+		kithttp.NewServer(ep.Update, decodeUpdateInstallmentPlanRequest, EncodeResponse, opts...),
+	).Methods(http.MethodPut)
+
 	r.Handle("/api/v1/installment-plans/{id}/pay",
 		kithttp.NewServer(ep.MarkPaid, decodeIDRequest(func(id string) interface{} {
 			return endpoint.MarkInstallmentPaidRequest{ID: id}
@@ -51,5 +55,15 @@ func decodeCreateInstallmentPlanRequest(_ context.Context, r *http.Request) (int
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
+	return req, nil
+}
+
+func decodeUpdateInstallmentPlanRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	id := mux.Vars(r)["id"]
+	var req endpoint.UpdateInstallmentPlanRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+	req.ID = id
 	return req, nil
 }

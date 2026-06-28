@@ -4,7 +4,9 @@ import { EmptyState } from '@/components/empty-state'
 import type { CategoryBreakdown } from '@/types/api'
 
 const CHART_COLORS = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#6366F1','#6B7280']
-const chartColor = (i: number) => CHART_COLORS[i % CHART_COLORS.length]
+const INSTALLMENT_COLOR = '#06B6D4' // cyan-500 — reservado para Parcelamentos
+const chartColor = (item: CategoryBreakdown, i: number) =>
+  item.category_id === '__installments__' ? INSTALLMENT_COLOR : CHART_COLORS[i % CHART_COLORS.length]
 
 interface CategoryChartProps {
   data: CategoryBreakdown[]
@@ -36,7 +38,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
               dataKey="total_cents"
             >
               {data.map((entry, i) => (
-                <Cell key={entry.category_id} fill={chartColor(i)} />
+                <Cell key={entry.category_id} fill={chartColor(entry, i)} />
               ))}
             </Pie>
             <Tooltip
@@ -58,7 +60,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
               <div className="flex items-center gap-2 min-w-0">
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: chartColor(i) }}
+                  style={{ backgroundColor: chartColor(item, i) }}
                 />
                 <span className="text-xs text-text truncate">{item.category_name}</span>
               </div>

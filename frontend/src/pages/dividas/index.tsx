@@ -24,6 +24,7 @@ export default function DividasPage() {
   const [showDebtForm, setShowDebtForm]             = useState(false)
   const [showInstallForm, setShowInstallForm]       = useState(false)
   const [editingDebt, setEditingDebt]               = useState<Debt | undefined>()
+  const [editingInstall, setEditingInstall]         = useState<InstallmentPlan | undefined>()
   const [deletingDebt, setDeletingDebt]             = useState<Debt | undefined>()
   const [deletingInstall, setDeletingInstall]       = useState<InstallmentPlan | undefined>()
   const [payingId, setPayingId]                     = useState<string | null>(null)
@@ -117,7 +118,7 @@ export default function DividasPage() {
           <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted">
             Parcelamentos Ativos
           </h2>
-          <Button variant="outline" size="sm" onClick={() => setShowInstallForm(true)}>
+          <Button variant="outline" size="sm" onClick={() => { setEditingInstall(undefined); setShowInstallForm(true) }}>
             <Plus className="h-3.5 w-3.5" /> Novo parcelamento
           </Button>
         </div>
@@ -131,6 +132,7 @@ export default function DividasPage() {
                 key={plan.id}
                 plan={plan}
                 category={catMap[plan.category_id]}
+                onEdit={() => { setEditingInstall(plan); setShowInstallForm(true) }}
                 onPay={() => {
                   setPayingId(plan.id)
                   payInstall.mutate(plan.id, { onSettled: () => setPayingId(null) })
@@ -148,7 +150,11 @@ export default function DividasPage() {
         onClose={() => { setShowDebtForm(false); setEditingDebt(undefined) }}
         editing={editingDebt}
       />
-      <InstallmentForm open={showInstallForm} onClose={() => setShowInstallForm(false)} />
+      <InstallmentForm
+        open={showInstallForm}
+        onClose={() => { setShowInstallForm(false); setEditingInstall(undefined) }}
+        editing={editingInstall}
+      />
 
       <AlertDialog
         open={!!deletingDebt}
@@ -268,9 +274,10 @@ function LoanDebtCard({ debt, onEdit, onDeactivate }: { debt: Debt; onEdit: () =
   )
 }
 
-function InstallmentCard({ plan, category, onPay, onDeactivate, paying }: {
+function InstallmentCard({ plan, category, onEdit, onPay, onDeactivate, paying }: {
   plan:         InstallmentPlan
   category?:    Category
+  onEdit:       () => void
   onPay:        () => void
   onDeactivate: () => void
   paying:       boolean
@@ -301,6 +308,7 @@ function InstallmentCard({ plan, category, onPay, onDeactivate, paying }: {
 
       <div className="flex justify-end gap-2 pt-1 border-t border-border/50">
         <Button variant="ghost" size="sm" onClick={onDeactivate} className="text-text-muted hover:text-negative">Remover</Button>
+        <Button variant="ghost" size="sm" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Editar</Button>
         <Button variant="secondary" size="sm" onClick={onPay} loading={paying}>
           <CheckCircle2 className="h-3.5 w-3.5" /> Pagar próxima
         </Button>

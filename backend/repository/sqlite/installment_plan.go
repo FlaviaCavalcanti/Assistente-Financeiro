@@ -89,7 +89,7 @@ func (r *installmentPlanRepository) FindActiveDueInMonth(ctx context.Context, ye
 	// Um plano tem parcela no mês se: first_due_date <= último dia do mês E ainda tem parcelas restantes.
 	// A data da N-ésima parcela = first_due_date + (N-1) meses. Simplificado: buscamos planos ativos
 	// onde first_due_date <= fim do mês alvo e paid_installments < total_installments.
-	lastDay := fmt.Sprintf("%04d-%02d-28", year, month) // conservador; SQLite não tem função de último dia do mês
+	lastDay := fmt.Sprintf("%04d-%02d-31", year, month) // maior string possível para o mês; comparação lexicográfica é segura
 	prefix := fmt.Sprintf("%04d-%02d", year, month)
 
 	rows, err := r.db.Conn.QueryContext(ctx,

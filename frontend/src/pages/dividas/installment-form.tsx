@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
-import { useCreateInstallmentPlan } from '@/hooks/use-installment-plans'
+import { useCreateInstallmentPlan, useUpdateInstallmentPlan } from '@/hooks/use-installment-plans'
 import { useDebts } from '@/hooks/use-debts'
 import { useCategories } from '@/hooks/use-categories'
-import { floatToCents } from '@/lib/format'
+import { floatToCents, centsToFloat } from '@/lib/format'
+import type { InstallmentPlan } from '@/types/api'
 
 const schema = z.object({
   description:            z.string().min(1, 'Descrição obrigatória'),
@@ -28,14 +29,16 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 interface InstallmentFormProps {
-  open:    boolean
-  onClose: () => void
+  open:      boolean
+  onClose:   () => void
+  editing?:  InstallmentPlan
 }
 
-export function InstallmentForm({ open, onClose }: InstallmentFormProps) {
+export function InstallmentForm({ open, onClose, editing }: InstallmentFormProps) {
   const { data: debts }      = useDebts({ onlyActive: true })
   const { data: categories } = useCategories()
   const createMut            = useCreateInstallmentPlan()
+  const updateMut            = useUpdateInstallmentPlan()
   const [apiError, setApiError] = useState<string | null>(null)
 
   const today = new Date().toISOString().split('T')[0]
@@ -48,9 +51,23 @@ export function InstallmentForm({ open, onClose }: InstallmentFormProps) {
   useEffect(() => {
     if (open) {
       setApiError(null)
-      form.reset({ paid_installments: 0, first_due_date: today })
+      if (editing) {
+        form.reset({
+          description:            editing.description,
+          debt_id:                editing.debt_id || '',
+          category_id:            editing.category_id,
+          installment_amount_brl: centsToFloat(editing.installment_amount_cents),
+          total_installments:     editing.total_installments,
+          paid_installments:      editing.paid_installments,
+          first_due_date:         editing.first_due_date
+            ? String(editing.first_due_date).slice(0, 10)
+            : today,
+        })
+      } else {
+        form.reset({ paid_installments: 0, first_due_date: today })
+      }
     }
-  }, [open])
+  }, [open, editing])
 
   const totalInstallments = form.watch('total_installments') ?? 0
   const paidInstallments  = form.watch('paid_installments')  ?? 0
@@ -60,26 +77,42 @@ export function InstallmentForm({ open, onClose }: InstallmentFormProps) {
     setApiError(null)
     try {
       const installmentCents = floatToCents(data.installment_amount_brl)
-      await createMut.mutateAsync({
-        description:              data.description,
-        debt_id:                  data.debt_id || undefined,
-        category_id:              data.category_id,
-        total_cents:              installmentCents * data.total_installments,
-        installment_amount_cents: installmentCents,
-        total_installments:       data.total_installments,
-        paid_installments:        data.paid_installments,
-        first_due_date:           data.first_due_date,
-      })
+      if (editing) {
+        await updateMut.mutateAsync({
+          id: editing.id,
+          data: {
+            description:              data.description,
+            debt_id:                  data.debt_id || undefined,
+            category_id:              data.category_id,
+            installment_amount_cents: installmentCents,
+            total_installments:       data.total_installments,
+            paid_installments:        data.paid_installments,
+            first_due_date:           data.first_due_date,
+          },
+        })
+      } else {
+        await createMut.mutateAsync({
+          description:              data.description,
+          debt_id:                  data.debt_id || undefined,
+          category_id:              data.category_id,
+          total_cents:              installmentCents * data.total_installments,
+          installment_amount_cents: installmentCents,
+          total_installments:       data.total_installments,
+          paid_installments:        data.paid_installments,
+          first_due_date:           data.first_due_date,
+        })
+      }
       onClose()
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Erro ao salvar parcelamento.')
     }
   })
 
-  const errors = form.formState.errors
+  const isPending = editing ? updateMut.isPending : createMut.isPending
+  const errors    = form.formState.errors
 
   return (
-    <Dialog open={open} onClose={onClose} title="Novo parcelamento">
+    <Dialog open={open} onClose={onClose} title={editing ? 'Editar parcelamento' : 'Novo parcelamento'}>
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label>Descrição *</Label>
@@ -143,7 +176,9 @@ export function InstallmentForm({ open, onClose }: InstallmentFormProps) {
 
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={createMut.isPending}>Adicionar parcelamento</Button>
+          <Button type="submit" loading={isPending}>
+            {editing ? 'Salvar alterações' : 'Adicionar parcelamento'}
+          </Button>
         </div>
       </form>
     </Dialog>

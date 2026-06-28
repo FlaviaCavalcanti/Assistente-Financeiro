@@ -105,6 +105,16 @@ type CreateInstallmentInput struct {
 	FirstDueDate           string // "YYYY-MM-DD" — próximo vencimento
 }
 
+type UpdateInstallmentInput struct {
+	Description            string
+	DebtID                 string
+	CategoryID             string
+	InstallmentAmountCents entity.Money
+	TotalInstallments      int
+	PaidInstallments       int
+	FirstDueDate           string // "YYYY-MM-DD"
+}
+
 type CreateGoalInput struct {
 	Name         string
 	Kind         entity.GoalKind
@@ -181,6 +191,7 @@ type InstallmentPlanService interface {
 	List(ctx context.Context, onlyActive bool) ([]entity.InstallmentPlan, error)
 	Get(ctx context.Context, id string) (entity.InstallmentPlan, error)
 	Create(ctx context.Context, input CreateInstallmentInput) (entity.InstallmentPlan, error)
+	Update(ctx context.Context, id string, input UpdateInstallmentInput) (entity.InstallmentPlan, error)
 	MarkInstallmentPaid(ctx context.Context, id string) (entity.InstallmentPlan, error)
 	Deactivate(ctx context.Context, id string) error
 }

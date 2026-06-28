@@ -113,14 +113,26 @@ func (s *summaryService) GetMonthly(ctx context.Context, month string) (entity.S
 			installmentCommitment.Int64(),
 	)
 
-	// 7. Breakdown por categoria (transações variáveis + gastos fixos ativos)
+	// 7. Breakdown por categoria (transações variáveis + gastos fixos ativos + parcelas do mês)
 	catSums, err := s.transactionRepo.SumByCategory(ctx, from, to)
 	if err != nil {
 		return entity.Summary{}, err
 	}
-	breakdown, err := s.buildBreakdown(ctx, catSums, fixedExpenses, fixedTotal.Add(variableTotal))
+	// Total inclui parcelas para que as fatias do gráfico representem o real comprometimento mensal
+	totalForBreakdown := fixedTotal.Add(variableTotal).Add(installmentCommitment)
+	breakdown, err := s.buildBreakdown(ctx, catSums, fixedExpenses, totalForBreakdown)
 	if err != nil {
 		return entity.Summary{}, err
+	}
+	// Adiciona entrada sintética para parcelamentos se houver compromisso no mês
+	if !installmentCommitment.IsZero() && !totalForBreakdown.IsZero() {
+		shareBps := entity.BasisPoints(installmentCommitment.Int64() * 10000 / totalForBreakdown.Int64())
+		breakdown = append(breakdown, entity.CategoryBreakdown{
+			CategoryID:   "__installments__",
+			CategoryName: "Parcelamentos",
+			TotalCents:   installmentCommitment,
+			ShareBps:     shareBps,
+		})
 	}
 
 	return entity.Summary{

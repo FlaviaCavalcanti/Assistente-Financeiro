@@ -60,6 +60,36 @@ func (s *installmentPlanService) Create(ctx context.Context, input CreateInstall
 	return p, nil
 }
 
+func (s *installmentPlanService) Update(ctx context.Context, id string, input UpdateInstallmentInput) (entity.InstallmentPlan, error) {
+	p, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return entity.InstallmentPlan{}, err
+	}
+
+	firstDueDate, err := time.Parse("2006-01-02", input.FirstDueDate)
+	if err != nil {
+		return entity.InstallmentPlan{}, errors.New("first_due_date inválida: use formato YYYY-MM-DD")
+	}
+
+	p.Description = input.Description
+	p.DebtID = input.DebtID
+	p.CategoryID = input.CategoryID
+	p.InstallmentAmountCents = input.InstallmentAmountCents
+	p.TotalCents = entity.Money(int64(input.InstallmentAmountCents) * int64(input.TotalInstallments))
+	p.TotalInstallments = input.TotalInstallments
+	p.PaidInstallments = input.PaidInstallments
+	p.FirstDueDate = firstDueDate
+	p.UpdatedAt = time.Now().UTC()
+
+	if err := p.Validate(); err != nil {
+		return entity.InstallmentPlan{}, err
+	}
+	if err := s.repo.Update(ctx, p); err != nil {
+		return entity.InstallmentPlan{}, err
+	}
+	return p, nil
+}
+
 func (s *installmentPlanService) MarkInstallmentPaid(ctx context.Context, id string) (entity.InstallmentPlan, error) {
 	p, err := s.repo.FindByID(ctx, id)
 	if err != nil {

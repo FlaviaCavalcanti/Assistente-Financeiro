@@ -9,11 +9,12 @@ import (
 )
 
 type InstallmentPlanEndpoints struct {
-	List        endpoint.Endpoint
-	Get         endpoint.Endpoint
-	Create      endpoint.Endpoint
-	MarkPaid    endpoint.Endpoint
-	Deactivate  endpoint.Endpoint
+	List       endpoint.Endpoint
+	Get        endpoint.Endpoint
+	Create     endpoint.Endpoint
+	Update     endpoint.Endpoint
+	MarkPaid   endpoint.Endpoint
+	Deactivate endpoint.Endpoint
 }
 
 func MakeInstallmentPlanEndpoints(svc service.InstallmentPlanService) InstallmentPlanEndpoints {
@@ -21,6 +22,7 @@ func MakeInstallmentPlanEndpoints(svc service.InstallmentPlanService) Installmen
 		List:       makeListInstallmentPlansEndpoint(svc),
 		Get:        makeGetInstallmentPlanEndpoint(svc),
 		Create:     makeCreateInstallmentPlanEndpoint(svc),
+		Update:     makeUpdateInstallmentPlanEndpoint(svc),
 		MarkPaid:   makeMarkInstallmentPaidEndpoint(svc),
 		Deactivate: makeDeactivateInstallmentPlanEndpoint(svc),
 	}
@@ -61,6 +63,24 @@ type CreateInstallmentPlanResponse struct {
 }
 
 func (r CreateInstallmentPlanResponse) Failed() error { return r.Err }
+
+type UpdateInstallmentPlanRequest struct {
+	ID                     string       `json:"-"`
+	Description            string       `json:"description"`
+	DebtID                 string       `json:"debt_id"`
+	CategoryID             string       `json:"category_id"`
+	InstallmentAmountCents entity.Money `json:"installment_amount_cents"`
+	TotalInstallments      int          `json:"total_installments"`
+	PaidInstallments       int          `json:"paid_installments"`
+	FirstDueDate           string       `json:"first_due_date"`
+}
+
+type UpdateInstallmentPlanResponse struct {
+	Plan entity.InstallmentPlan `json:"plan"`
+	Err  error                  `json:"-"`
+}
+
+func (r UpdateInstallmentPlanResponse) Failed() error { return r.Err }
 
 type MarkInstallmentPaidRequest struct{ ID string }
 
@@ -105,6 +125,22 @@ func makeCreateInstallmentPlanEndpoint(svc service.InstallmentPlanService) endpo
 			FirstDueDate: req.FirstDueDate,
 		})
 		return CreateInstallmentPlanResponse{Plan: p, Err: err}, nil
+	}
+}
+
+func makeUpdateInstallmentPlanEndpoint(svc service.InstallmentPlanService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(UpdateInstallmentPlanRequest)
+		p, err := svc.Update(ctx, req.ID, service.UpdateInstallmentInput{
+			Description:            req.Description,
+			DebtID:                 req.DebtID,
+			CategoryID:             req.CategoryID,
+			InstallmentAmountCents: req.InstallmentAmountCents,
+			TotalInstallments:      req.TotalInstallments,
+			PaidInstallments:       req.PaidInstallments,
+			FirstDueDate:           req.FirstDueDate,
+		})
+		return UpdateInstallmentPlanResponse{Plan: p, Err: err}, nil
 	}
 }
 
